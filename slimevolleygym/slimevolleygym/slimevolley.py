@@ -696,6 +696,7 @@ class SlimeVolleyEnv(gym.Env):
   atari_mode = False
   survival_bonus = False # Depreciated: augment reward, easier to train
   cross_net_reward = True # Reward for hitting ball over net: +0.01 right->left, -0.01 left->right
+  hit_ball_reward = True # Reward for hitting ball: +0.05 when right agent hits ball
   multiagent = True # optional args anyways
 
   def __init__(self):
@@ -791,7 +792,16 @@ class SlimeVolleyEnv(gym.Env):
     self.game.agent_left.setAction(otherAction)
     self.game.agent_right.setAction(action) # external agent is agent_right
 
+    # Track ball collision before step (for hit ball reward)
+    ball_hit_by_right_before = self.game.ball.isColliding(self.game.agent_right) if self.hit_ball_reward else False
+
     reward = self.game.step()
+
+    # Hit ball reward: reward agent for successfully hitting the ball
+    hit_ball_reward = 0
+    if self.hit_ball_reward and ball_hit_by_right_before:
+      hit_ball_reward = 0.01  # Positive reward for hitting ball
+      reward += hit_ball_reward
 
     # Check for ball crossing net (from right side to left side)
     # Return small reward for training agent (right) when ball crosses to left
@@ -802,10 +812,10 @@ class SlimeVolleyEnv(gym.Env):
         # Ball crossed the net!
         if self.game.ball_last_side == 1 and current_side == -1:
           # Ball went from right to left - good for right agent
-          cross_net_reward = 0.01
+          cross_net_reward = 0.05
         elif self.game.ball_last_side == -1 and current_side == 1:
           # Ball went from left to right - bad for right agent
-          cross_net_reward = -0.01
+          cross_net_reward = -0.05
         self.game.ball_last_side = current_side
       reward += cross_net_reward
 
