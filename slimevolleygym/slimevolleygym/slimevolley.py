@@ -51,7 +51,7 @@ FACTOR = WINDOW_WIDTH / REF_W
 
 # if set to true, renders using cv2 directly on numpy array
 # (otherwise uses pyglet / opengl -> much smoother for human player)
-PIXEL_MODE = False 
+PIXEL_MODE = False
 PIXEL_SCALE = 4 # first render at multiple of Pixel Obs resolution, then downscale. Looks better.
 
 PIXEL_WIDTH = 84*2*1
@@ -67,7 +67,7 @@ def setNightColors():
   AGENT_RIGHT_COLOR = (255, 236, 0)
   PIXEL_AGENT_LEFT_COLOR = (255, 191, 0) # AMBER
   PIXEL_AGENT_RIGHT_COLOR = (255, 191, 0) # AMBER
-  
+
   BACKGROUND_COLOR = (11, 16, 19)
   FENCE_COLOR = (102, 56, 35)
   COIN_COLOR = FENCE_COLOR
@@ -88,7 +88,7 @@ def setDayColors():
   AGENT_RIGHT_COLOR = (0, 150, 255)
   PIXEL_AGENT_LEFT_COLOR = (240, 75, 0)
   PIXEL_AGENT_RIGHT_COLOR = (0, 150, 255)
-  
+
   BACKGROUND_COLOR = (255, 255, 255)
   FENCE_COLOR = (240, 210, 130)
   COIN_COLOR = FENCE_COLOR
@@ -479,7 +479,7 @@ class BaselinePolicy:
 
     self.nOutput = self.nGameOutput+self.nRecurrentState
     self.nInput = self.nGameInput+self.nOutput
-    
+
     # store current inputs and outputs
     self.inputState = np.zeros(self.nInput)
     self.outputState = np.zeros(self.nOutput)
@@ -543,6 +543,7 @@ class Game:
     self.agent_right = None
     self.delayScreen = None
     self.np_random = np_random
+    self.ball_last_side = 0  # Track which side ball was on: -1=left, 1=right, 0=center
     self.reset()
   def reset(self):
     self.ground = Wall(0, 0.75, REF_W, REF_U, c=GROUND_COLOR)
@@ -556,11 +557,13 @@ class Game:
     self.agent_left.updateState(self.ball, self.agent_right)
     self.agent_right.updateState(self.ball, self.agent_left)
     self.delayScreen = DelayScreen()
+    self.ball_last_side = 1 if self.ball.x > 0 else -1  # Initialize based on starting position
   def newMatch(self):
     ball_vx = self.np_random.uniform(low=-20, high=20)
     ball_vy = self.np_random.uniform(low=10, high=25)
     self.ball = Particle(0, REF_W/4, ball_vx, ball_vy, 0.5, c=BALL_COLOR);
     self.delayScreen.reset()
+    self.ball_last_side = 1 if self.ball.x > 0 else -1  # Reset tracking after new match
   def step(self):
     """ main game loop """
 
@@ -692,6 +695,7 @@ class SlimeVolleyEnv(gym.Env):
   from_pixels = False
   atari_mode = False
   survival_bonus = False # Depreciated: augment reward, easier to train
+  cross_net_reward = True # Reward for hitting ball over net: +0.01 right->left, -0.01 left->right
   multiagent = True # optional args anyways
 
   def __init__(self):
@@ -775,7 +779,7 @@ class SlimeVolleyEnv(gym.Env):
 
     if self.otherAction is not None:
       otherAction = self.otherAction
-      
+
     if otherAction is None: # override baseline policy
       obs = self.game.agent_left.getObservation()
       otherAction = self.policy.predict(obs)
@@ -788,6 +792,22 @@ class SlimeVolleyEnv(gym.Env):
     self.game.agent_right.setAction(action) # external agent is agent_right
 
     reward = self.game.step()
+
+    # Check for ball crossing net (from right side to left side)
+    # Return small reward for training agent (right) when ball crosses to left
+    cross_net_reward = 0
+    if self.cross_net_reward:
+      current_side = 1 if self.game.ball.x > 0 else -1
+      if current_side != self.game.ball_last_side:
+        # Ball crossed the net!
+        if self.game.ball_last_side == 1 and current_side == -1:
+          # Ball went from right to left - good for right agent
+          cross_net_reward = 0.01
+        elif self.game.ball_last_side == -1 and current_side == 1:
+          # Ball went from left to right - bad for right agent
+          cross_net_reward = -0.01
+        self.game.ball_last_side = current_side
+      reward += cross_net_reward
 
     obs = self.getObs()
 
@@ -870,7 +890,7 @@ class SlimeVolleyEnv(gym.Env):
   def close(self):
     if self.viewer:
       self.viewer.close()
-    
+
   def get_action_meanings(self):
     return [self.atari_action_meaning[i] for i in self.atari_action_set]
 
