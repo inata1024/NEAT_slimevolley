@@ -60,9 +60,6 @@ def make_env(env_name, seed=-1, render_mode=False):
     if env_name.endswith("Discrete"):
       env.atari_mode = True # enable discrete action space
 
-    # Optional: Add survival bonus for easier training
-    # Uncomment the line below to give +0.01 reward per timestep
-    # env = SurvivalRewardEnv(env)
 
   # -- Other  -------------------------------------------------------- -- #
   else:

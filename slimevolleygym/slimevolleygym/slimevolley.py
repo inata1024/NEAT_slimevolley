@@ -694,7 +694,7 @@ class SlimeVolleyEnv(gym.Env):
 
   from_pixels = False
   atari_mode = False
-  survival_bonus = False # Depreciated: augment reward, easier to train
+  survival_bonus = True # Depreciated: augment reward, easier to train
   cross_net_reward = True # Reward for hitting ball over net: +0.01 right->left, -0.01 left->right
   hit_ball_reward = True # Reward for hitting ball: +0.05 when right agent hits ball
   multiagent = True # optional args anyways
@@ -746,6 +746,7 @@ class SlimeVolleyEnv(gym.Env):
 
     # another avenue to override the built-in AI's action, going past many env wraps:
     self.otherAction = None
+    self.decay_rate = 1.0
 
   def seed(self, seed=None):
     self.np_random, seed = seeding.np_random(seed)
@@ -777,6 +778,7 @@ class SlimeVolleyEnv(gym.Env):
     """
     done = False
     self.t += 1
+    self.decay_rate = 1.0 - (self.t / self.t_limit)
 
     if self.otherAction is not None:
       otherAction = self.otherAction
@@ -795,12 +797,12 @@ class SlimeVolleyEnv(gym.Env):
     # Track ball collision before step (for hit ball reward)
     ball_hit_by_right_before = self.game.ball.isColliding(self.game.agent_right) if self.hit_ball_reward else False
 
-    reward = self.game.step()
+    reward = self.game.step() * (1.0 + self.decay_rate) # reward early wins
 
     # Hit ball reward: reward agent for successfully hitting the ball
     hit_ball_reward = 0
     if self.hit_ball_reward and ball_hit_by_right_before:
-      hit_ball_reward = 0.01  # Positive reward for hitting ball
+      hit_ball_reward = 0.01 * self.decay_rate  # Positive reward for hitting ball
       reward += hit_ball_reward
 
     # Check for ball crossing net (from right side to left side)
@@ -812,10 +814,8 @@ class SlimeVolleyEnv(gym.Env):
         # Ball crossed the net!
         if self.game.ball_last_side == 1 and current_side == -1:
           # Ball went from right to left - good for right agent
-          cross_net_reward = 0.05
-        elif self.game.ball_last_side == -1 and current_side == 1:
-          # Ball went from left to right - bad for right agent
-          cross_net_reward = -0.05
+          cross_net_reward = 0.05 * self.decay_rate
+
         self.game.ball_last_side = current_side
       reward += cross_net_reward
 
@@ -843,7 +843,7 @@ class SlimeVolleyEnv(gym.Env):
     }
 
     if self.survival_bonus:
-      return obs, reward+0.01, done, info
+      return obs, reward+0.01 * self.decay_rate, done, info
     return obs, reward, done, info
 
   def init_game_state(self):
