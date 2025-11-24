@@ -254,6 +254,8 @@ def selectAct(action, actSelect):
     action = softmax(action)
   elif actSelect == 'prob':
     action = weightedRandom(np.sum(action,axis=0))
+  elif actSelect == 'hard':
+    action = np.argmax(action)
   else:
     action = action.flatten()
   return action

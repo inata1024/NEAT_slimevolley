@@ -114,7 +114,31 @@ cartpole_swingup = cartpole_swingup._replace(\
     env_name='CartPoleSwingUp', max_episode_length=1000)
 games['swingup'] = cartpole_swingup
 
+# -- Slime Volleyball ---------------------------------------------------- -- #
 
+# > State-space observation (12-dim vector)
+# State vector: [x_agent, y_agent, vx_agent, vy_agent,
+#                x_ball, y_ball, vx_ball, vy_ball,
+#                x_opponent, y_opponent, vx_opponent, vy_opponent]
+slimevolley_state = Game(env_name='SlimeVolley',
+  actionSelect='hard',
+  input_size=12,
+  output_size=6,  # Atari mode: 6 discrete actions (NOOP, LEFT, UPLEFT, UP, UPRIGHT, RIGHT)
+  time_factor=0,
+  layers=[20, 20],
+  i_act=np.full(12,1),  # Linear activation for input layer
+  h_act=[1,2,3,4,5,6,7,8,9,10],  # All activation functions available for hidden layers
+  o_act=np.full(6,1),   # Linear output (before softmax in actionSelect)
+  weightCap = 2.0,
+  noise_bias=0.0,
+  output_noise=[False, False, False],
+  max_episode_length = 1000,
+  in_out_labels = ['x_agent','y_agent','vx_agent','vy_agent',
+                   'x_ball','y_ball','vx_ball','vy_ball',
+                   'x_opponent','y_opponent','vx_opponent','vy_opponent',
+                   'NOOP','LEFT','UPLEFT','UP','UPRIGHT','RIGHT']
+)
+games['slimevolley'] = slimevolley_state
 
 
 # -- Bipedal Walker ------------------------------------------------------ -- #
@@ -171,4 +195,3 @@ bullet_ant = Game(env_name='AntBulletEnv-v0',
   in_out_labels = []
 )
 games['bullet_ant'] = bullet_ant
-
