@@ -116,19 +116,16 @@ games['swingup'] = cartpole_swingup
 
 # -- Slime Volleyball ---------------------------------------------------- -- #
 
-# > State-space observation (12-dim vector)
-# State vector: [x_agent, y_agent, vx_agent, vy_agent,
-#                x_ball, y_ball, vx_ball, vy_ball,
-#                x_opponent, y_opponent, vx_opponent, vy_opponent]
-slimevolley_state = Game(env_name='SlimeVolley',
-  actionSelect='hard',
+# > Multi-Binary action space (3 binary outputs: [forward, backward, jump])
+slimevolley_multibinary = Game(env_name='SlimeVolley_MultiBinary',
+  actionSelect='slime',
   input_size=12,
-  output_size=6,  # Atari mode: 6 discrete actions (NOOP, LEFT, UPLEFT, UP, UPRIGHT, RIGHT)
+  output_size=3,  # MultiBinary(3): [forward, backward, jump]
   time_factor=0,
   layers=[20, 20],
   i_act=np.full(12,1),  # Linear activation for input layer
   h_act=[1,2,3,4,5,6,7,8,9,10],  # All activation functions available for hidden layers
-  o_act=np.full(6,1),   # Linear output (before softmax in actionSelect)
+  o_act=np.full(3,6),   # Sigmoid activation for binary outputs (activation ID 6)
   weightCap = 2.0,
   noise_bias=0.0,
   output_noise=[False, False, False],
@@ -136,9 +133,23 @@ slimevolley_state = Game(env_name='SlimeVolley',
   in_out_labels = ['x_agent','y_agent','vx_agent','vy_agent',
                    'x_ball','y_ball','vx_ball','vy_ball',
                    'x_opponent','y_opponent','vx_opponent','vy_opponent',
+                   'forward','backward','jump']
+)
+games['slimevolley'] = slimevolley_multibinary
+
+# > Discrete action space (6 discrete actions with softmax)
+# For Atari-style discrete action selection
+slimevolley_discrete = slimevolley_multibinary._replace(
+  env_name='SlimeVolley_Discrete',
+  actionSelect='hard',
+  output_size=6,  # 6 discrete actions: NOOP, LEFT, UPLEFT, UP, UPRIGHT, RIGHT
+  o_act=np.full(6,1),  # Linear output
+  in_out_labels = ['x_agent','y_agent','vx_agent','vy_agent',
+                   'x_ball','y_ball','vx_ball','vy_ball',
+                   'x_opponent','y_opponent','vx_opponent','vy_opponent',
                    'NOOP','LEFT','UPLEFT','UP','UPRIGHT','RIGHT']
 )
-games['slimevolley'] = slimevolley_state
+games['slimevolley_discrete'] = slimevolley_discrete
 
 
 # -- Bipedal Walker ------------------------------------------------------ -- #

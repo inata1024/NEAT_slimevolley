@@ -57,7 +57,8 @@ def make_env(env_name, seed=-1, render_mode=False):
   elif (env_name.startswith("SlimeVolley")):
     from slimevolleygym.slimevolleygym.slimevolley import SlimeVolleyEnv
     env = SlimeVolleyEnv()
-    env.atari_mode = True # enable discrete action space
+    if env_name.endswith("Discrete"):
+      env.atari_mode = True # enable discrete action space
 
   # -- Other  -------------------------------------------------------- -- #
   else:
