@@ -62,7 +62,7 @@ def make_env(env_name, seed=-1, render_mode=False):
 
     # Optional: Add survival bonus for easier training
     # Uncomment the line below to give +0.01 reward per timestep
-    env = SurvivalRewardEnv(env)
+    # env = SurvivalRewardEnv(env)
 
   # -- Other  -------------------------------------------------------- -- #
   else:
