@@ -695,9 +695,11 @@ class SlimeVolleyEnv(gym.Env):
   from_pixels = False
   atari_mode = False
   survival_bonus = True # Depreciated: augment reward, easier to train
-  cross_net_reward = True # Reward for hitting ball over net: +0.01 right->left, -0.01 left->right
-  hit_ball_reward = True # Reward for hitting ball: +0.05 when right agent hits ball
+  cross_net_reward = False # Reward for hitting ball over net: +0.01 right->left, -0.01 left->right
+  hit_ball_reward = False # Reward for hitting ball: +0.05 when right agent hits ball
   multiagent = True # optional args anyways
+
+  feature_engineering = True # whether to use feature engineering (6 features) or raw obs (12 features)
 
   def __init__(self):
     """
@@ -754,12 +756,30 @@ class SlimeVolleyEnv(gym.Env):
     self.ale = self.game.agent_right # for compatibility for some models that need the self.ale.lives() function
     return [seed]
 
+  def process_features(self, obs):
+      """
+      Feature engineering for agent.
+
+      obs: Observation from the environment.
+      Returns vector of features.
+      """
+
+      x,y,vx,vy,bx,by,bvx,bvy,ox,oy,ovx,ovy = obs
+
+      # Calculate relative positions and velocities from the agent's perspective
+      rel_ball_x = bx - x
+      rel_ball_y = by - y
+      rel_ball_vx = bvx
+      rel_ball_vy = bvy
+      return np.array([x,y,rel_ball_x, rel_ball_y, rel_ball_vx, rel_ball_vy]) # using 6 features now
   def getObs(self):
     if self.from_pixels:
       obs = self.render(mode='state')
       self.canvas = obs
     else:
       obs = self.game.agent_right.getObservation()
+      if self.feature_engineering:
+        obs = self.process_features(obs)
     return obs
 
   def discreteToBox(self, n):
@@ -814,7 +834,7 @@ class SlimeVolleyEnv(gym.Env):
         # Ball crossed the net!
         if self.game.ball_last_side == 1 and current_side == -1:
           # Ball went from right to left - good for right agent
-          cross_net_reward = 0.05 * self.decay_rate
+          cross_net_reward = 0.05
 
         self.game.ball_last_side = current_side
       reward += cross_net_reward
@@ -842,8 +862,8 @@ class SlimeVolleyEnv(gym.Env):
       'otherState': self.game.agent_left.getObservation(),
     }
 
-    if self.survival_bonus:
-      return obs, reward+0.01 * self.decay_rate, done, info
+    if self.survival_bonus and self.t < 1000:
+      return obs, reward+0.01, done, info
     return obs, reward, done, info
 
   def init_game_state(self):

@@ -257,8 +257,11 @@ def selectAct(action, actSelect):
   elif actSelect == 'hard':
     action = np.argmax(action)
   elif actSelect == 'slime':
-    action = (action > 0.75).astype(int)
     action = action.flatten()
+    forward = int(action[0]>0.5)
+    backward= int(action[0]<-0.5)
+    jump    = int(action[1]>0.5)
+    action = np.array([forward, backward, jump])
   else:
     action = action.flatten()
   return action

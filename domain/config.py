@@ -119,21 +119,28 @@ games['swingup'] = cartpole_swingup
 # > Multi-Binary action space (3 binary outputs: [forward, backward, jump])
 slimevolley_multibinary = Game(env_name='SlimeVolley_MultiBinary',
   actionSelect='slime',
-  input_size=12,
+  input_size=6,
   output_size=3,  # MultiBinary(3): [forward, backward, jump]
   time_factor=0,
   layers=[20, 20],
-  i_act=np.full(12,1),  # Linear activation for input layer
+  i_act=np.full(6,1),  # Linear activation for input layer
   h_act=[1,2,3,4,5,6,7,8,9,10],  # All activation functions available for hidden layers
-  o_act=np.full(3,6),   # Sigmoid activation for binary outputs (activation ID 6)
+  o_act=np.full(2,1),   # Linear activation for output layer
   weightCap = 2.0,
   noise_bias=0.0,
   output_noise=[False, False, False],
   max_episode_length = 3000,
-  in_out_labels = ['x_agent','y_agent','vx_agent','vy_agent',
-                   'x_ball','y_ball','vx_ball','vy_ball',
-                   'x_opponent','y_opponent','vx_opponent','vy_opponent',
-                   'forward','backward','jump']
+  # in_out_labels = ['x_agent','y_agent','vx_agent','vy_agent',
+  #                  'x_ball','y_ball','vx_ball','vy_ball',
+  #                  'x_opponent','y_opponent','vx_opponent','vy_opponent',
+  #                  'forward','backward','jump']
+  # in_out_labels = ['x_agent','y_agent','rel_ball_x','rel_ball_y',
+  #                  'rel_ball_vx','rel_ball_vy',
+  #                  'forward','backward','jump']
+  in_out_labels = ['x_agent','y_agent','rel_ball_x','rel_ball_y',
+                   'rel_ball_vx','rel_ball_vy',
+                   'forward/back','jump']
+
 )
 games['slimevolley'] = slimevolley_multibinary
 
