@@ -8,7 +8,7 @@
     slimevolley_multibinary = Game(env_name='SlimeVolley_MultiBinary',
       actionSelect='slime',
       input_size=6,
-      output_size=3,  # MultiBinary(3): [forward, backward, jump]
+      output_size=2,
       time_factor=0,
       layers=[20, 20],
       i_act=np.full(6,1),  # Linear activation for input layer

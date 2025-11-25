@@ -1,0 +1,6 @@
+{
+    "task":"slimevolley",
+    "alg_nReps": 8,
+    "maxGen": 256,
+    "popSize": 192
+}

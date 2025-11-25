@@ -694,7 +694,7 @@ class SlimeVolleyEnv(gym.Env):
 
   from_pixels = False
   atari_mode = False
-  survival_bonus = True # Depreciated: augment reward, easier to train
+  survival_bonus = False # Depreciated: augment reward, easier to train
   cross_net_reward = False # Reward for hitting ball over net: +0.01 right->left, -0.01 left->right
   hit_ball_reward = False # Reward for hitting ball: +0.05 when right agent hits ball
   multiagent = True # optional args anyways
@@ -798,7 +798,7 @@ class SlimeVolleyEnv(gym.Env):
     """
     done = False
     self.t += 1
-    self.decay_rate = 1.0 - (self.t / self.t_limit)
+    self.decay_srate = 1.0 - (self.t / self.t_limit)
 
     if self.otherAction is not None:
       otherAction = self.otherAction

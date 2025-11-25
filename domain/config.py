@@ -120,7 +120,7 @@ games['swingup'] = cartpole_swingup
 slimevolley_multibinary = Game(env_name='SlimeVolley_MultiBinary',
   actionSelect='slime',
   input_size=6,
-  output_size=3,  # MultiBinary(3): [forward, backward, jump]
+  output_size=2,  # MultiBinary(2): [forward/back, jump]
   time_factor=0,
   layers=[20, 20],
   i_act=np.full(6,1),  # Linear activation for input layer
@@ -133,7 +133,7 @@ slimevolley_multibinary = Game(env_name='SlimeVolley_MultiBinary',
   # in_out_labels = ['x_agent','y_agent','vx_agent','vy_agent',
   #                  'x_ball','y_ball','vx_ball','vy_ball',
   #                  'x_opponent','y_opponent','vx_opponent','vy_opponent',
-  #                  'forward','backward','jump']
+  #                  'forward/back','jump']
   # in_out_labels = ['x_agent','y_agent','rel_ball_x','rel_ball_y',
   #                  'rel_ball_vx','rel_ball_vy',
   #                  'forward','backward','jump']
